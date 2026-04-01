@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>學習歷程 App</title>
+
+<style>
+body{
+    font-family: Arial;
+    background: #121212; /* 換成深黑色 */
+    color: white;        /* 文字換成白色 */
+    padding: 30px;
+}
+
+.container{
+    background: #222222; /* 容器換成深灰色 */
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 500px;
+    margin: auto;
+    border: 1px solid #333; /* 加個淡淡的邊框 */
+}
+
+h1{
+    text-align: center;
+    color: #00adb5;
+}
+
+input, select{
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    background: #333;   /* 輸入框變深色 */
+    color: white;       /* 輸入文字變白色 */
+    border: 1px solid #444;
+}
+
+button{
+    width: 100%;
+    padding: 10px;
+    background: #00adb5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+table{
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+td, th{
+    border: 1px solid #444; /* 表格邊框變深色 */
+    padding: 8px;
+    text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📘 學習紀錄</h1>
+
+<label>科目</label>
+<select id="subject">
+<option>數學</option>
+<option>英文</option>
+<option>國文</option>
+<option>物理</option>
+<option>化學</option>
+<option>生物</option>
+<option>歷史</option>
+<option>地理</option>
+<option>公民</option>
+</select>
+
+<label>學習時間（分鐘）</label>
+<input type="number" id="time">
+
+<label>專注度（1-5）</label>
+<input type="number" id="focus" min="1" max="5">
+
+<button onclick="saveData()">儲存紀錄</button>
+
+<table id="table">
+<tr>
+<th>科目</th>
+<th>時間</th>
+<th>專注度</th>
+</tr>
+</table>
+
+</div>
+
+<script>
+
+function saveData(){
+
+let subject = document.getElementById("subject").value
+let time = document.getElementById("time").value
+let focus = document.getElementById("focus").value
+
+let table = document.getElementById("table")
+
+let row = table.insertRow()
+
+row.insertCell(0).innerText = subject
+row.insertCell(1).innerText = time
+row.insertCell(2).innerText = focus
+
+}
+
+</script>
+
+</body>
+</html>
