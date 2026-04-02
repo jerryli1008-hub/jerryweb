@@ -3,257 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學習紀錄 App - 終極整合版</title>
+    <title>學習紀錄系統 - 欄位還原與圖示優化版</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        body { font-family: "Microsoft JhengHei", Arial, sans-serif; background: #121212; color: white; padding: 20px; }
-        .container { background: #222222; padding: 25px; border-radius: 15px; max-width: 800px; margin: auto; border: 1px solid #333; }
-        h1, h2 { text-align: center; color: #00adb5; }
+        body { font-family: "Microsoft JhengHei", Arial, sans-serif; background: #121212; color: white; padding: 20px; margin: 0; }
+        .container { max-width: 1200px; margin: auto; position: relative; min-height: 100vh; padding-bottom: 80px; }
+        h1 { color: #00adb5; margin-top: 0; font-size: 24px; text-align: center; margin-bottom: 25px; }
 
-        /* 1. 計時器區域樣式 */
-        .timer-box {
-            background: #1a1a1a; padding: 20px; border-radius: 10px; text-align: center;
-            margin-bottom: 20px; border: 2px solid #00adb5;
+        .main-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .left-panel { flex: 7; background: #222; padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        .right-panel { flex: 3; display: flex; flex-direction: column; gap: 20px; }
+
+        /* 💡 版面：回到 2 欄位排版，並移除學習狀況格子 */
+        .input-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .input-item { display: flex; flex-direction: column; }
+        
+        /* 💡 科目、章節、日期、記錄時間、學習時間五個欄位的排版配置 */
+        .input-item:nth-child(1), .input-item:nth-child(2) { grid-column: span 1; } /* 第一列：科目、章節 */
+        .input-item:nth-child(3), .input-item:nth-child(4) { grid-column: span 1; } /* 第二列：日期、時間 */
+        .input-item:nth-child(5) { grid-column: 1 / 2; } /* 第三列：學習時間單獨在左側，不佔用全部寬度 */
+
+        label { font-size: 14px; color: #00adb5; margin-bottom: 5px; font-weight: bold; }
+        
+        input, select { background: #333; color: white; border: 1px solid #444; padding: 10px; border-radius: 5px; font-size: 14px; }
+
+        /* 💡 核心修正：讓原生圖示（日曆、時鐘）變白、變明顯 */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* 翻轉顏色，將黑色圖示轉為白色 */
+            cursor: pointer;
+            opacity: 1; /* 確保完全顯示 */
         }
-        #timerDisplay { font-size: 48px; font-family: monospace; color: #00ff00; margin-bottom: 10px; }
-        .timer-btn { background: #444; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
-        .btn-start { border-bottom: 3px solid #00ff00; }
-        .btn-reset { border-bottom: 3px solid #ff4500; }
 
-        /* 2. 輸入欄位樣式 */
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        label { display: block; margin-top: 10px; font-weight: bold; color: #00adb5; }
-        input, select { 
-            width: 100%; padding: 12px; margin-top: 5px; background: #333; 
-            color: white; border: 1px solid #444; border-radius: 8px; box-sizing: border-box; 
-        }
+        .button-group { margin: 20px 0; display: flex; gap: 10px; }
+        .main-btn { background: #00adb5; color: white; border: none; padding: 15px; border-radius: 5px; cursor: pointer; font-size: 16px; flex: 2; font-weight: bold; }
+        .clear-data-btn { background: #444; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; flex: 1; }
 
-        .button-group { display: flex; gap: 10px; margin-top: 20px; }
-        button.main-btn { flex: 2; padding: 15px; background: #00adb5; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; }
-        button.clear-btn { flex: 1; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; }
-
-        /* 3. 圖表區域 */
-        .chart-box { background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 25px 0; text-align: center; }
-        #chartContainer { width: 100%; max-width: 300px; margin: auto; }
-
-        /* 4. 表格樣式 */
-        table { width: 100%; margin-top: 30px; border-collapse: collapse; font-size: 14px; }
-        td, th { border: 1px solid #444; padding: 10px; text-align: center; }
-        .status-5 { color: #00ff00; font-weight: bold; }
-        .status-4 { color: #adff2f; }
-        .status-3 { color: #ffff00; }
-        .status-2 { color: #ffa500; }
-        .status-1 { color: #ff4500; font-weight: bold; }
+        /* 表格與其餘樣式保持不變 */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 15px; }
+        th { background: #333; color: #eee; padding: 10px; border-bottom: 2px solid #00adb5; }
+        td { border-bottom: 1px solid #333; padding: 10px; text-align: center; }
+        .table-select { background: #1a1a1a; border: 1px solid #444; padding: 5px; border-radius: 4px; cursor: pointer; font-weight: bold; outline: none; }
+        .c-5 { color: #00ff00 !important; } .c-4 { color: #adff2f !important; } .c-3 { color: #ffff00 !important; } .c-2 { color: #ffa500 !important; } .c-1 { color: #ff4500 !important; }
     </style>
 </head>
-
 <body>
 
 <div class="container">
-    <h1> 學習紀錄系統</h1>
+    <h1>📝 學習紀錄APP</h1>
 
-    <div class="timer-box">
-    <div style="margin-bottom:10px;">
-        設定倒數：
-        <input type="number" id="setMinutes" value="0" style="width:50px; display:inline;"> 分 
-        <input type="number" id="setSeconds" value="0" style="width:50px; display:inline;"> 秒
+    <div class="main-layout">
+        <div class="left-panel">
+            <div class="input-grid">
+                <div class="input-item"><label>科目</label>
+                    <select id="subject">
+                        <option>國文</option><option>英文</option><option>數學</option>
+                        <option>物理</option><option>化學</option><option>地理</option>
+                        <option>公民</option><option>歷史</option>
+                    </select>
+                </div>
+                <div class="input-item"><label>章節</label><input type="text" id="chapter" placeholder="章節名稱"></div>
+                <div class="input-item"><label>讀書日期</label><input type="date" id="date"></div>
+                <div class="input-item"><label>記錄時間</label><input type="time" id="time"></div>
+                <div class="input-item"><label>學習時間 (min)</label><input type="number" id="studyMin" placeholder="手動輸入時間"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="main-btn" onclick="saveData()">儲存紀錄</button>
+                <button class="clear-data-btn" onclick="resetInputs()">清空資料</button>
+            </div>
+
+            <h2 style="font-size: 18px; color: #00adb5;">📜 歷史紀錄 (可在下方直接修改理解狀況)</h2>
+            <table>
+                <thead>
+                    <tr><th>科目</th><th>章節</th><th>日期</th><th>學習狀況</th><th>分鐘</th></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="right-panel">
+            <div class="mini-timer" style="background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #00adb5; text-align: center;">
+                <h2 style="font-size:16px; margin:0;">⏱️ 計時器</h2>
+                <div id="timerDisplay" style="font-size: 32px; color: #00ff00; margin: 10px 0;">25:00</div>
+                <input type="number" id="setMinutes" value="25" style="width:40px;"> min
+                <button onclick="toggleTimer()" style="margin-top:10px;">開始/暫停</button>
+            </div>
+            <div class="mini-chart" style="background: #1a1a1a; padding: 20px; border-radius: 12px; text-align: center;">
+                <h2 style="font-size:16px; margin-bottom:10px;">📊 科目佔比統計</h2>
+                <canvas id="myPieChart"></canvas>
+            </div>
+        </div>
     </div>
-    <div id="timerDisplay">00:00</div>
-    <button class="timer-btn btn-start" id="startBtn" onclick="toggleTimer()">開始倒數</button>
-    <button class="timer-btn btn-reset" onclick="resetTimer()">重置</button>
 </div>
 
-    <div class="input-grid">
-        <div>
-            <label>科目</label>
-            <select id="subject">
-                <option>國文</option><option>英文</option><option>數學</option>
-                <option>物理</option><option>化學</option><option>地理</option>
-                <option>公民</option><option>歷史</option>
-            </select>
-        </div>
-        <div>
-            <label>章節</label>
-            <input type="text" id="chapter" placeholder="例如：矩陣、三角函數">
-        </div>
-        <div>
-            <label>讀書日期</label>
-            <input type="date" id="date">
-        </div>
-        <div>
-            <label>記錄時間</label>
-            <input type="time" id="time">
-        </div>
-        <div>
-            <label>學習狀況</label>
-            <select id="status">
-                <option value="5">完全理解</option><option value="4">大致理解</option>
-                <option value="3">部分理解</option><option value="2">不甚理解</option>
-                <option value="1">完全不解</option>
-            </select>
-        </div>
-        <div>
-            <label>學習時間 (min)</label>
-            <input type="number" id="studyMin" placeholder="自動填入或手動輸入">
-        </div>
-    </div>
-
-    <div class="button-group">
-        <button class="main-btn" onclick="saveData()">儲存紀錄</button>
-        <button class="clear-btn" onclick="clearAll()">清空資料</button>
-    </div>
-
-    <div class="chart-box">
-        <h2>各科學習比例統計</h2>
-        <div id="chartContainer"><canvas id="myPieChart"></canvas></div>
-    </div>
-
-    <table id="table">
-        <thead>
-            <tr><th>科目</th><th>章節</th><th>日期</th><th>時間</th><th>狀況</th><th>分鐘</th></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
-</div>
-
-<audio id="alarmSound" src="alarm.mp3.mp3" preload="auto"></audio>
-
-
+<audio id="alarmSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock_beep.ogg" preload="auto"></audio>
 
 <script>
-    let myPieChart = null;
-    let timerInterval;
-    let totalSeconds = 0;
-    let isRunning = false;
-    let initialMinutes = 0;
+    const subjectColors = {
+        '國文': '#00adb5', '英文': '#ff5722', '數學': '#ffeb3b', 
+        '物理': '#4caf50', '化學': '#9c27b0', '地理': '#2196f3', 
+        '公民': '#e91e63', '歷史': '#607d8b'
+    };
 
-    // --- 頁面初始化 ---
+    let myPieChart = null, timerInterval, totalSeconds = 0, isRunning = false;
+
     window.onload = function() {
-        // 預填日期與時間
         const now = new Date();
         document.getElementById('date').value = now.toISOString().substring(0, 10);
         document.getElementById('time').value = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        
-        renderAll(); // 渲染舊資料
+        renderAll();
     };
 
-    // --- 計時器功能 ---
-    function toggleTimer() {
-    if (!isRunning) {
-        if (totalSeconds <= 0) {
-            // 同時讀取分鐘與秒數
-            let mins = parseInt(document.getElementById("setMinutes").value) || 0;
-            let secs = parseInt(document.getElementById("setSeconds").value) || 0;
-            initialMinutes = mins + (secs / 60); // 換算成總分鐘數，存入紀錄用
-            totalSeconds = (mins * 60) + secs;
-        }
-        if (isNaN(totalSeconds) || totalSeconds <= 0) return;
-        timerInterval = setInterval(updateCountdown, 1000);
-        document.getElementById("startBtn").innerText = "暫停";
-        isRunning = true;
-    } else {
-        clearInterval(timerInterval);
-        document.getElementById("startBtn").innerText = "繼續";
-        isRunning = false;
-    }
-}
-
-    function updateCountdown() {
-        if (totalSeconds <= 0) {
-            clearInterval(timerInterval);
-            document.getElementById("alarmSound").play();
-            alert("時間到囉！");
-            document.getElementById("studyMin").value = initialMinutes; // 自動填入學習時間
-            resetTimer();
-            return;
-        }
-        totalSeconds--;
-        let mins = Math.floor(totalSeconds / 60);
-        let secs = totalSeconds % 60;
-        document.getElementById("timerDisplay").innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    function resetTimer() {
-        clearInterval(timerInterval);
-        isRunning = false;
-        totalSeconds = 0;
-        const alarm = document.getElementById("alarmSound");
-        alarm.pause();         // 暫停播放
-        alarm.currentTime = 0; // 將時間歸零，下次播才會從頭開始
-        document.getElementById("startBtn").innerText = "開始倒數";
-        document.getElementById("timerDisplay").innerText = document.getElementById("setMinutes").value.padStart(2, '0') + ":00";
-    }
-
-    // --- 資料儲存與渲染 ---
     function saveData() {
         const subject = document.getElementById("subject").value;
         const chapter = document.getElementById("chapter").value;
-        const date = document.getElementById("date").value;
-        const time = document.getElementById("time").value;
         const studyMin = document.getElementById("studyMin").value;
-        const statusSelect = document.getElementById("status");
-
-        if (chapter.trim() === "" || studyMin === "") {
-            alert("章節與時間不能空白！"); return;
-        }
-
-        const record = {
-            subject, chapter, date, time, 
-            studyMin: parseInt(studyMin),
-            statusText: statusSelect.options[statusSelect.selectedIndex].text,
-            statusValue: statusSelect.value
-        };
-
-        let savedData = JSON.parse(localStorage.getItem("studyRecords")) || [];
-        savedData.push(record);
-        localStorage.setItem("studyRecords", JSON.stringify(savedData));
-
+        if (!chapter || !studyMin) { alert("內容不完整！"); return; }
+        const record = { id: Date.now(), subject, chapter, studyMin: parseInt(studyMin), date: document.getElementById("date").value, time: document.getElementById("time").value, statusValue: "5" }; // 預設為完全理解
+        let data = JSON.parse(localStorage.getItem("studyRecords")) || [];
+        data.push(record);
+        localStorage.setItem("studyRecords", JSON.stringify(data));
         renderAll();
-        document.getElementById("chapter").value = "";
-        document.getElementById("studyMin").value = "";
+        resetInputs();
+    }
+
+    function resetInputs() { document.getElementById("chapter").value = ""; document.getElementById("studyMin").value = ""; }
+
+    function updateRecordStatus(recordId, newStatus, element) {
+        let data = JSON.parse(localStorage.getItem("studyRecords")) || [];
+        const index = data.findIndex(item => item.id == recordId);
+        if (index !== -1) { data[index].statusValue = newStatus; localStorage.setItem("studyRecords", JSON.stringify(data)); element.className = `table-select c-${newStatus}`; }
     }
 
     function renderAll() {
-        const savedData = JSON.parse(localStorage.getItem("studyRecords")) || [];
+        const data = JSON.parse(localStorage.getItem("studyRecords")) || [];
         const tableBody = document.getElementById("tableBody");
         tableBody.innerHTML = "";
-        savedData.slice().reverse().forEach(data => {
+        data.slice().reverse().forEach(item => {
             const row = tableBody.insertRow();
-            row.insertCell(0).innerText = data.subject;
-            row.insertCell(1).innerText = data.chapter;
-            row.insertCell(2).innerText = data.date;
-            row.insertCell(3).innerText = data.time;
-            const sCell = row.insertCell(4);
-            sCell.innerText = data.statusText;
-            sCell.className = "status-" + data.statusValue;
-            row.insertCell(5).innerText = data.studyMin;
+            const color = subjectColors[item.subject] || '#fff';
+            row.insertCell(0).innerHTML = `<b style="color:${color}">${item.subject}</b>`;
+            row.insertCell(1).innerText = item.chapter;
+            row.insertCell(2).innerText = item.date;
+            const statusCell = row.insertCell(3);
+            statusCell.innerHTML = `<select class="table-select c-${item.statusValue}" onchange="updateRecordStatus(${item.id}, this.value, this)">
+                <option value="5" class="c-5" ${item.statusValue == '5' ? 'selected' : ''}>完全理解</option>
+                <option value="4" class="c-4" ${item.statusValue == '4' ? 'selected' : ''}>大致理解</option>
+                <option value="3" class="c-3" ${item.statusValue == '3' ? 'selected' : ''}>部分理解</option>
+                <option value="2" class="c-2" ${item.statusValue == '2' ? 'selected' : ''}>不甚理解</option>
+                <option value="1" class="c-1" ${item.statusValue == '1' ? 'selected' : ''}>完全不解</option></select>`;
+            row.insertCell(4).innerText = item.studyMin;
         });
-        updateChart(savedData);
+        updateChart(data);
     }
 
     function updateChart(data) {
         const stats = {};
         data.forEach(item => stats[item.subject] = (stats[item.subject] || 0) + item.studyMin);
+        const labels = Object.keys(stats);
+        const colors = labels.map(label => subjectColors[label] || '#ccc');
         const ctx = document.getElementById('myPieChart').getContext('2d');
         if (myPieChart) myPieChart.destroy();
-        myPieChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: Object.keys(stats),
-                datasets: [{
-                    data: Object.values(stats),
-                    backgroundColor: ['#00adb5', '#ff5722', '#ffeb3b', '#4caf50', '#9c27b0', '#2196f3', '#e91e63', '#607d8b'],
-                    borderColor: '#222', borderWidth: 2
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
-        });
+        myPieChart = new Chart(ctx, { type: 'pie', data: { labels, datasets: [{ data: Object.values(stats), backgroundColor: colors, borderColor: '#222', borderWidth: 2 }] }, options: { plugins: { legend: { display: true, position: 'bottom', labels: { color: '#aaa' } } } } });
     }
 
-    function clearAll() {
-        if(confirm("確定刪除所有紀錄？")) { localStorage.removeItem("studyRecords"); location.reload(); }
+    function toggleTimer() {
+        if (!isRunning) {
+            if (totalSeconds <= 0) totalSeconds = (parseInt(document.getElementById("setMinutes").value) || 0) * 60;
+            if (totalSeconds <= 0) return;
+            timerInterval = setInterval(() => {
+                if (totalSeconds <= 0) { clearInterval(timerInterval); document.getElementById("alarmSound").play(); alert("時間到！專注完成！"); resetTimer(); return; }
+                totalSeconds--;
+                let m = Math.floor(totalSeconds / 60), s = totalSeconds % 60;
+                document.getElementById("timerDisplay").innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+            isRunning = true;
+        } else { clearInterval(timerInterval); isRunning = false; }
     }
+    function resetTimer() { clearInterval(timerInterval); isRunning = false; totalSeconds = 0; document.getElementById("timerDisplay").innerText = document.getElementById("setMinutes").value.padStart(2, '0') + ":00"; }
+    function clearAll() { if(confirm("確定要清空嗎？")) { localStorage.removeItem("studyRecords"); location.reload(); } }
 </script>
 </body>
 </html>
